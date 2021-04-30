@@ -1,3 +1,4 @@
+
 const fill = (ctx, color) => {
     ctx.save();
     ctx.fillStyle = color;
@@ -12,7 +13,4 @@ const fillRect = (ctx, x, y, w, h, color = 'black') => {
     ctx.restore();
 };
 
-export {
-    fill,
-    fillRect,
-};
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min) + min);
