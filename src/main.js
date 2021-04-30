@@ -67,7 +67,6 @@
             // Check collision
             if (Rectangle.areColliding(player, spike)) {
                 // Game over
-                alert('You lose!');
                 reset();
             }
         });
