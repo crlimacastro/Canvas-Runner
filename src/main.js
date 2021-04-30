@@ -1,3 +1,5 @@
+'use strict';
+
 (() => {
     // Constants
     const CANVAS_WIDTH = 3840;
