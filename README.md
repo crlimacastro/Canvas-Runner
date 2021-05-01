@@ -22,13 +22,13 @@ W, Arrow Up, or Space to reset game after Game Over.
 
 Recommended Tools: VSCode
 
-### Parts
+### Table of Contents
 
 - [I. Starter Code](#i-starter-code)
 - [II. Drawing on the Canvas](#ii-drawing-on-the-canvas)
 - [III. Writing Game Loops](#iii-writing-game-loops)
-- [IV. Introducing the Player & Classes](#iv-introducing-the-player-&-classes)
-- [V. Jumping & Gravity](#v-jumping-&-gravity)
+- [IV. Introducing the Player & Classes](#iv-introducing-the-player--classes)
+- [V. Jumping & Gravity](#v-jumping--gravity)
 - [VI. Spikes - the Spice of Life](#vi-spikes---the-spice-of-life)
 
 ### I. Starter Code
