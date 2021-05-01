@@ -30,6 +30,7 @@ Recommended Tools: VSCode
 - [IV. Introducing the Player & Classes](#iv-introducing-the-player--classes)
 - [V. Jumping & Gravity](#v-jumping--gravity)
 - [VI. Spikes - the Spice of Life](#vi-spikes---the-spice-of-life)
+- [VII. Beyond this Code](#vii-beyond-this-code)
 
 ### I. Starter Code
 
@@ -410,7 +411,7 @@ Even though we don't see it, this same screen is getting drawn on top of itself 
 
 Now we are going to create our third and last JavaScript file. Create a `classes.js` file in `src`. Don't forget to import it to your page in `index.html`. Make sure it is after `utils.js` as our `classes.js` script will make use of it. Make sure it is before `main.js` as it will be used by it.
 
-This also marks the last change we will have to do to `index.html` so here it is one last time.
+This also marks the last change we will have to do to `index.html`, so here is the full file one last time.
 
 `index.html`
 ``` html
@@ -459,7 +460,7 @@ The first function is our `constructor` which will be called when we use the sta
 
 Object.assign(object, object) will assign all of the properties of the object on the right to the object on the left. This will put all of the parameters passed into our constructor during the call into `this` (the `Rectangle` object being made).
 
-`draw(ctx, color)` is a function that now all `Rectangle` objects will have and can be called from them. It is a helper function that will automatically draw a rectangle with the stored position and size properties.
+`draw(ctx, color)` is a function that now all `Rectangle` objects will have and can be called from them. It is a helper function that will automatically draw a rectangle at the right place with the stored position and size properties.
 
 <br>
 
@@ -524,7 +525,7 @@ const init = () => {
 };
 ```
 
-Now that you know how classes and objects work, you should try turning the floor into an object on your own. The same way you did for the player and call its `.draw(ctx, color)` function in the `draw(ctx)` loop.
+Now that you know how classes and objects work, you should try turning the floor into a `Rectangle` object on your own the same way you did for the player. Remember to call its `.draw(ctx, color)` function in the `draw(ctx)` loop.
 
 ### V. Jumping & Gravity
 
@@ -714,7 +715,7 @@ We listen for an Event called `'keydown'`. This happens whenever the player pres
 
 Then, if one of the jump keys was pressed, we skip acceleration on our cascade of forces and set the velocity directly to a negative value. This will make the object travel up for a while until gravity (which is accelerating the object down) eventually takes over and makes it fall back down.
 
-There is one bug we have yet to fix however. Try pressing any of the jump keys multiple times before even reaching the floor. Our player keeps jumping up in the air!
+There is one bug we have to fix now. Try pressing any of the jump keys multiple times before even reaching the floor. Our player keeps jumping up in the air!
 
 <br>
 
@@ -753,7 +754,7 @@ class Player extends Entity {
 }
 ```
 
-A class dedicated solely to the player and it `extends Entity` which itself `extends Rectangle`, so it will contain the properties and functionalities of both.
+This is a class dedicated solely to the player and it `extends Entity` which itself `extends Rectangle`, so it will contain the properties and functionalities of both.
 
 The only change is that now there is a `isGrounded` property which is a Boolean (`true`/`false`) value that we set to `false` when the player is created.
 
@@ -780,6 +781,15 @@ In our `'keydown'` Event function, check that the player is grounded before tryi
 
 `main.js`
 ``` javascript
+const init = () => {
+        
+        ...
+    
+        // Init game objects
+        floor = new Rectangle(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT);
+        player = new Player(PLAYER_START_X, CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE);
+        player.acceleration.y = GRAVITY;
+
 // Events
     document.addEventListener('keydown', e => {
         if (player.isGrounded && (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')) {
@@ -801,7 +811,7 @@ We are almost done! All we need now is a losing condition, an obstacle for the p
 
 Thankfully, because of our structure, we already have most of the pieces we need to make the spikes.
 
-We will be working a lot with random integers in the following lines of code so let us visit an old friend, our `utils.js` file and add a helper function to get a random integer (no decimal point) number between two numbers.
+We will be working a lot with random integers in the following lines of code so let us visit an old friend, our `utils.js` file and add a helper function to get a random integer (no decimal point) number between any two numbers.
 
 `utils.js`
 ``` javascript
@@ -821,7 +831,9 @@ const randomRangeInt = (min, max) => {
 };
 ```
 
-Let's forward declare our array of spikes among the globals and create a helper `spawnSpike()` function that will be our last infinite loop.
+We will have to create an `Array` of spikes among the globals. An array is an ordered list of elements that can be anything you want (numbers, strings, even objects). This array will help us keep all of our spikes in one place so we can easily access them all.
+
+Let's forward declare our array of spikes among the globals and create a helper `spawnSpike()` function that will be another infinite loop like `update()`.
 
 `main.js`
 ``` javascript
@@ -1067,9 +1079,9 @@ const stop = () => {
 
 Together, these three functions define the flow of the Game Over state. 
 
-When a collision happens between a spike and the player, `stop()` will be called. This will stop the currently queued (and thus subsequent) update and spawnSpike calls. `stop()` will also start listening for `'keydown'` events and call `tryReset(e)` whenever they are triggered.
+When a collision happens between a spike and the player, `stop()` will be called. This will stop the currently queued (and thus subsequent) `update()` and `spawnSpike()` calls. `stop()` will also start listening for `'keydown'` events and call `tryReset(e)` whenever they are triggered.
 
-`tryReset(e)` will check if one of the jump keys was pressed. If so, it will remove itself from the listener and call `reset()`.
+`tryReset(e)` will check if one of the jump keys was pressed. If so, it will remove itself from the listener so that we don't reset with the jump keys while playing and it will call `reset()`.
 
 `reset()` does exactly what you would expect. Resets the player's position and velocity, clears the spikes array, and starts the `update()` loop again.
 
@@ -1077,7 +1089,7 @@ When a collision happens between a spike and the player, `stop()` will be called
 
 Something I didn't mention before is that both the `setTimeout(function, milliseconds)` and `requestAnimationFrame(function)` functions return a `Number` value, which is the id of the timeout request that we can use to cancel it. We weren't saving it before because it was not being used, but it will prove very useful for the stop feature.
 
-Create globals for the spawnSpikeID and updateID and in their respective functions, cache the return value of their `setTimeout(function, milliseconds)` call. In `update()`, if a collision is found with the player, call `stop()`.
+Create globals for the spawnSpikeID and updateID and in their respective functions, save the return value of their `setTimeout(function, milliseconds)` call. In `update()`, if a collision is found with the player, call `stop()`.
 
 The `spawnSpike()` and `update()` loops would end up looking like so:
 
@@ -1133,7 +1145,7 @@ const update = () => {
 };
 ```
 
-Finally, we are nearing the end of this tutorial and there is only one last thing to take care of. Because of the scope our functions and variables were declared on, the player currently has full control over the game logic through the console. They can call update(), they can call stop(), and even mess with the spikes array and that is very bad news for our game.
+Finally, we are nearing the end of this tutorial and there is only one last thing to take care of. Because of the scope our functions and variables were declared on, the player currently has full control over the game logic through the console. They can call `update()`, they can call `stop()`, and even mess with the spikes array and that is very bad news for our game. Try it yourself, you will see the console try to autocomplete with the name of your functions.
 
 The quickest way to solve this is to declare all of the code in our `main.js` file within an [IIFE](https://flaviocopes.com/javascript-iife/#:~:text=An%20Immediately%2Dinvoked%20Function%20Expression%20(IIFE%20for%20friends)%20is,way%20to%20isolate%20variables%20declarations.). Put simply, it is an anonymous function that is called as soon as it is created and it serves to create an enclosed scope that no outside script can access.
 
@@ -1304,3 +1316,16 @@ In the end, our `main.js` file would look like so:
     };
 })();
 ```
+
+### VII. Beyond this Code
+
+[Table of Contents](#table-of-contents)
+
+---
+
+That is all you need to create a simple endless runner in the canvas. Try going back and playing with the code a bit.
+1. Go back to the globals and see how changing the numbers affects your physics.
+2. If you want to use an image for your player instead of a rectangle, try creating a `Sprite` class that `extends Rectangle` and takes in an extra `image` parameter at the beginning. Then, override its `draw(ctx, color)` method to a `draw(ctx)` and use the context's `drawImage(image, x, y, w, h)` method which you can read about [here](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage). Then all you have to do is grab your image either from a hidden `<img>` tag in your page or create a `new Image()` object which you can read about [here](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/Image) and set its `src` property to the path to an image in your file structure. Don't forget to make the `Player` class `extend Sprite` instead of `Rectangle`, to change the player constructor's parameters and send the image back in `init()`, and finally, you can remove the color from the player's new `.draw(ctx)` method back in the `draw(ctx)` loop.
+3. Build off of this code and try creating an entirely different game. Maybe Pong? Now that you know how to make update loops, render, and grab user input the possibilities are endless.
+
+Remember to stay curious and expand your horizons. Happy coding!
