@@ -24,19 +24,21 @@ Recommended Tools: VSCode
 
 ### Parts
 
-- [I. Start Code](#i.-start-code)
-- [II. Drawing on the Canvas](#ii.-drawing-on-the-canvas)
-- [III. Writing Game Loops](#iii.-writing-game-loops)
-- [IV. Introducing the Player & Classes](#iv.-introducing-the-player-&-classes)
-- [V. Jumping & Gravity](#v.-jumping-&-gravity)
-- [VI. Spikes - the Spice of Life](#vi.-spikes---the-spice-of-life)
+- [I. Starter Code](#i-starter-code)
+- [II. Drawing on the Canvas](#ii-drawing-on-the-canvas)
+- [III. Writing Game Loops](#iii-writing-game-loops)
+- [IV. Introducing the Player & Classes](#iv-introducing-the-player-&-classes)
+- [V. Jumping & Gravity](#v-jumping-&-gravity)
+- [VI. Spikes - the Spice of Life](#vi-spikes---the-spice-of-life)
 
-### I. Start Code
+### I. Starter Code
 
 ---
 
-Create an `index.html` file and add some boilerplate HTML as well as a `<canvas>` elements to the body.
-If using VSCode, you can use the `html:5` macro to generate this easier. Simply type `html:5`, press Enter and it will autocomplete for you.
+Create an `index.html` file and add some [boilerplate](https://en.wikipedia.org/wiki/Boilerplate_code) HTML as well as a `<canvas>` element to the body.
+If using VSCode, you can use the `html:5` snippet to generate this easier. Simply type `html:5`, press Enter, and it will autocomplete for you.
+
+Or copy and paste it from below:
 
 `index.html`
 ``` html
@@ -80,9 +82,9 @@ Attach the styles to the `index.html` page in the `<head>` section with:
 
 Create a `src` (meaning source) folder to contain all of your scripts and create a `main.js` file.
 
-Inside of `main.js` add a "use strict" directive to the top. Literally write the string "use strict" followed by a semicolon (;). This indicates to the JavaScript to not allow and warn about "bad code" (like using undeclared variables) which would normally be allowed outside of strict mode. This can save you from a lot of headaches when debugging and will make your code cleaner.
+Inside of `main.js` add a "use strict" directive to the top. Literally write the string "use strict" followed by a semicolon `;`. This indicates to the JavaScript to not allow and warn about "bad code" (like using undeclared variables) which would normally be allowed outside of strict mode. This can save you from a lot of headaches when debugging and will make your code cleaner.
 
-Also, add an `init` function and call it as soon as the window loads. This is to make sure that all DOM Elements (`<h1>`'s, `<p>`'s, `<canvas>`) are actually created on the page before the init function is called. 
+Add an `init()` function to `main.js` and call it as soon as the window loads. This is to make sure that all DOM Elements (`<h1>`'s, `<p>`'s, `<canvas>`) are actually created on the page before the `init()` function is called. 
 
 `main.js`
 ``` javascript
@@ -119,21 +121,21 @@ Import the `main.js` script back in `index.html` with a `<script>` tag in the `<
 </html>
 ```
 
-And with that, our starting code is out of the way. 
+And with that, our starter code is done. 
 
 To see your page you have several options, here's two:
 1. Look at your page in the browser by opening up `index.html` and any time you save changes and want to see them, close the tab and open up `index.html` again.
-2. Or, ideally, if you are using VSCode or any other code editor, find a simple local server functionality with automatic reloads whenever you make a change so that you don't have to reopen your file (In VSCode look for the Live Server extension, then right-click `index.html` and click `Open with Live Server`). 
+2. Or ideally, if you are using VSCode or any other code editor, find a simple local server functionality with automatic reloads whenever you make changes so that you don't have to reopen your file every time (in VSCode look for and install the Live Server extension, right-click `index.html` and click `Open with Live Server`). 
 
 ### II. Drawing on the Canvas
 
 ---
 
-Next we will retrieve the canvas and save it into a variable in our script using JavaScript's document.querySelector(String) function. Then, we will set its width and height to an arbitrary resolution.
+Next we will get the canvas and save it into a variable in our script using JavaScript's document.querySelector(String) function. Then, we will set its width and height to an arbitrary resolution.
 
 These two dimensions will determine how many pixels are in the canvas so we can work with absolute pixel measurements and not have to worry about the actual size of the canvas on the window (which the CSS handles).
 
-Be mindful that whatever numbers you choose for the resolution will influence the rest of your code. It will affect your x, y positions and your game physics like gravity and velocity.
+Be mindful that whatever numbers you choose for the resolution will influence the rest of your code. It will affect your x, y positions and the effect of some of your constants like GRAVITY and PLAYER_JUMP_VELOCITY.
 
 `main.js`
 ``` javascript
@@ -159,7 +161,7 @@ window.onload = () => {
 };
 ```
 
-Then we will get the canvas' 2D Context. The canvas is the actual element on the page. The context is the interface that will allow us to do all of the drawing. Read all about it [here](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D).
+Then we will get the canvas' 2D Context. The canvas is the actual element on the page. The context is the interface that will allow us to do all of the drawing. You can read all about it [here](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D).
 
 `main.js`
 ``` javascript
@@ -176,7 +178,7 @@ const init = () => {
 };
 ```
 
-So now we have our drawing context (ctx). Why don't we do some actual drawing with it? Write this line of code right after you grab the context in init.
+So now we have our drawing context `ctx`. Why don't we do some actual drawing with it? Write this line of code right after you grab the context in `init()`.
 
 `main.js`
 ``` javascript
@@ -187,15 +189,15 @@ ctx.fillStyle = 'red';
 ctx.fillRect(437, 400, 1005, 504);
 ```
 
-We should now have our first visual feedback that everything is working correctly. Do you see the red rectangle on the screen? Now is a good time to say that if you don't see it, you should press the F12 key on the keyboard and navigate to the console tab (or however else you reach the console in your browser) to address errors (if there are any).
+We should now have our first visual feedback that everything is working correctly. Do you see the red rectangle on the screen? Now is a good time to introduce the console. If you don't see it, you should press the F12 key on the keyboard and navigate to the console tab (or however else you reach the console in your browser) to address any errors.
 
 ![Screenshot of canvas with a red rectangle](./tutorial/images/red_rectangle.png)
 
-`ctx.fillStyle` is a property and will take any CSS color value as a string and set that as the current color the context is drawing with. Think of it like changing what color pencil you are drawing with.
+`ctx.fillStyle` is a property and will take any CSS color value as a `String` and set that as the current color the context is drawing with. Think of it like changing what color pencil you are coloring with.
 
-`ctx.fillRect(x,y,w,h)` will take in 4 parameters and draw a rectangle at that x, y position with 'w' pixel width and 'h' pixel height. From the top left point to the bottom right point.
+`ctx.fillRect(x,y,w,h)` will take in 4 parameters and draw a rectangle at that `x, y` position with `w` pixel width and `h` pixel height. From the top left point to the bottom right point.
 
-Note that x, y coordinates in the canvas start from the TOP LEFT corner and x increases going RIGHT and y increases going DOWN.
+Note that `x, y` coordinates in the canvas start from the TOP LEFT corner and x increases going right and y increases going DOWN.
 
 This is very important! In HTML Canvas, point (0, 0) starts at the TOP LEFT corner and increases going RIGHT and DOWN. That means point (40, 50) is above point (56, 156).
 
@@ -203,7 +205,7 @@ The canvas 2D context has a lot different drawing methods that you can read abou
 
 <br>
 
-Okay! Now that we know how to draw with the context. Lets make some helper functions for ourselves. Create a `utils.js` file inside the `src` folder. Don't forget to import it back in `index.html` with a `<script src="./src/utils.js"></script>` tag and make sure to put it before your `main.js` tag as main will make use of our utility functions, so they need to be created first.
+Okay! Now that we know how to draw with the context. Let's make some helper functions for ourselves. Create a `utils.js` file inside the `src` folder. Don't forget to import it back in `index.html` with a `<script src="./src/utils.js"></script>` tag and make sure to put it before your `main.js` tag as main will make use of our utility functions, so they need to be created first.
 
 Add these two functions inside of `utils.js`:
 
@@ -230,11 +232,11 @@ const fill = (ctx, color) => {
 
 First we have our handy `"use strict"` directive which will help us commit less mistakes. Then we have two functions
 
-Our own `fillRect` function which will take a context, all of the parameters needed for a rectangle (x, y, width, height), and a color which is set to a default of `'black'`.
+Our own `fillRect` function which will take a context, all of the parameters needed for a rectangle `(x, y, width, height)`, and a color which is set to a default of `'black'`.
 
-A `fill` function which takes in a context and a color and will set all of the pixels in the canvas a certain color. Notice that the context has a useful back-reference to the canvas element inside of it.
+A `fill` function which takes in a context and a color and will set all of the pixels in the canvas a certain color. Notice that the context has a useful back-reference to the canvas element inside of it!
 
-Also of note are the new `ctx.save()` and `ctx.restore()` functions. Basically, `save` will remember the state of the context at the point it is called (like what color is the fillStyle set to) and `restore` will bring the context back to the last save point (or the beginning defaults if there are none).
+Also of note are the new `ctx.save()` and `ctx.restore()` functions. Basically, `save()` will remember the state of the context at the point it is called (like what color is the fillStyle set to) and `restore()` will bring the context back to the last save point (or to default if there are none).
 
 Whenever you edit states of the context in a function, like the `fillStyle`, you should use `ctx.save()` and `ctx.restore()` to make sure that the function does not affect the context outside of its scope.
 
@@ -281,7 +283,7 @@ window.onload = () => {
 
 ---
 
-Behind any real-time game's code, there is an update loop. Games are real-time applications that have to track state across many frames every second. One common way to do that is to call an update function every single frame. Let's do that.
+Behind any real-time game's codebase, there is an update loop. Games are real-time applications that have to track state across many frames every second. One common way to handle this is to call an update function every single frame. Let's do that.
 
 To be extra organized we will actually have two loops running in our game. An `update()` function that handles the logic and state variables of the game and a `draw(ctx)` function that will take care of rendering the visuals to the canvas. Define them and call them from `init()`.
 
@@ -316,9 +318,9 @@ Now the problem is that `init()` is only called once and we want these two new f
 
 Introducing JavaScript's `setTimeout(function, milliseconds)` and `requestAnimationFrame(function)` functions.
 
-`setTimeout` is a function that will queue up another function to be called after a set amount of time has passed (in milliseconds). We will use this function at the beginning of `update()` so that we can get a constant frame loop for our logic.
+`setTimeout` is a function that will queue up another function to be called after a set amount of time has passed (in milliseconds). We will use this function at the beginning of `update()` so that we can get a loop with a constant framerate.
 
-`requestAnimationFrame` will also queue up a function to be called later, but you do not have as much control over when this happens. And it may fluctuate! Which is bad for news for when we want to start moving things on the screen. The function will be called on the browser's refresh rate before the next repaint, so it is perfect for rendering.
+`requestAnimationFrame` will also queue up a function to be called later, but you do not have as much control over when this happens. And it may fluctuate! Which is bad news for when we want to start moving things on the screen. The function will be called on the browser's refresh rate before the next repaint, so it is perfect for rendering.
 
 `main.js`
 ``` javascript
@@ -350,7 +352,7 @@ Notice that in `draw(ctx)`, we actually pass an anonymous (nameless) one-line fu
 <br>
 
 In draw, lets fill the screen with a background color every frame. This serves two purposes.
-1. It provides a nice colorful and interesting background and clarifies the area of our canvas.
+1. It provides a nice colorful and interesting background that clarifies the area of our canvas.
 2. It draws over (thus clearing) anything rendered in the previous frame.
 
 And while we are at it, let's also draw the floor for our runner game.
@@ -386,7 +388,7 @@ const draw = (ctx) => {
 };
 ```
 
-Notice that the y position of the floor is `CANVAS_HEIGHT - FLOOR_HEIGHT`. Subtracting the height of the floor from the lowest point in the canvas brings the y position up to the point we want. We are subtracting because smaller y values will bring you up! Canvas goes from TOP to BOTTOM!
+Notice that the `y` position of the floor is `CANVAS_HEIGHT - FLOOR_HEIGHT`. Subtracting the height of the floor from the lowest point in the canvas brings the `y` position up to the point we want. We are subtracting because smaller `y` values will bring you up! Canvas goes from TOP to BOTTOM!
 
 <br>
 
@@ -745,7 +747,7 @@ A class dedicated solely to the player and it `extends Entity` which itself `ext
 
 The only change is that now there is a `isGrounded` property which is a Boolean (`true`/`false`) value that we set to `false` when the player is created.
 
-Return to `main.js`. Back in `init()`. change the player to a `new Player(x, y, w, h)` instead of an `Entity` (cnce again, no need to change the parameters). In `update()`, find the piece of code where we check that the player does not go below the floor and set the player's `isGrounded` property to `true`.
+Return to `main.js`. Back in `init()`. change the player to a `new Player(x, y, w, h)` instead of an `Entity` (once again, no need to change the parameters). In `update()`, find the piece of code where we check that the player does not go below the floor and set the player's `isGrounded` property to `true`.
 
 `main.js`
 ``` javascript
