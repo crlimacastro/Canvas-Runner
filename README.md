@@ -18,6 +18,17 @@ W, Arrow Up, or Space to Jump.
 
 ## Tutorial
 
+Recommended Tools: VSCode
+
+### Parts
+
+- [I. Start Code](#i.-start-code)
+- [II. Drawing on the Canvas](#ii.-drawing-on-the-canvas)
+- [III. Writing Game Loops](#iii.-writing-game-loops)
+- [IV. Introducing the Player & Classes](#iv.-introducing-the-player-&-classes)
+- [V. Jumping & Gravity](#v.-jumping-&-gravity)
+- [VI. Spikes - the Spice of Life](#vi.-spikes---the-spice-of-life)
+
 ### I. Start Code
 
 ---
@@ -106,9 +117,13 @@ Import the `main.js` script back in `index.html` with a `<script>` tag in the `<
 </html>
 ```
 
-And with that, our starting code is out of the way.
+And with that, our starting code is out of the way. 
 
-### II. Drawing in the Canvas
+To see your page you have several options, here's two:
+1. Look at your page in the browser by opening up `index.html` and any time you save changes and want to see them, close the tab and open up `index.html` again.
+2. Or, ideally, if you are using VSCode or any other code editor, find a simple local server functionality with automatic reloads whenever you make a change so that you don't have to reopen your file (In VSCode look for the Live Server extension, then right-click `index.html` and click `Open with Live Server`). 
+
+### II. Drawing on the Canvas
 
 ---
 
@@ -170,7 +185,7 @@ ctx.fillStyle = 'red';
 ctx.fillRect(437, 400, 1005, 504);
 ```
 
-We should now have our first visual feedback that everything is working correctly. Do you see the red rectangle on the screen? Now is a good time to say that if you don't see it, you should press the F12 key on the keyboard and navigate to the console tab to address errors (if there are any).
+We should now have our first visual feedback that everything is working correctly. Do you see the red rectangle on the screen? Now is a good time to say that if you don't see it, you should press the F12 key on the keyboard and navigate to the console tab (or however else you reach the console in your browser) to address errors (if there are any).
 
 ![Screenshot of canvas with a red rectangle](./tutorial/images/red_rectangle.png)
 
@@ -264,7 +279,7 @@ window.onload = () => {
 
 Behind any real-time game's code, there is an update loop. Games are real-time applications that have to track state across many frames every second. One common way to do that is to call an update function every single frame. Let's do that.
 
-To be extra organized we will actually have two loops running in our game. An `update()` function that handles the logic and state variables of the game and a `draw(ctx)` function that will take care of rendering the visuals to the canvas. Define them and call them from init.
+To be extra organized we will actually have two loops running in our game. An `update()` function that handles the logic and state variables of the game and a `draw(ctx)` function that will take care of rendering the visuals to the canvas. Define them and call them from `init()`.
 
 `main.js`
 ``` javascript
@@ -292,3 +307,478 @@ const init = () => {
     draw(ctx);
 };
 ```
+
+Now the problem is that `init()` is only called once and we want these two new functions to be called an indeterminate amount of times while the game is running.
+
+Introducing JavaScript's `setTimeout(function, milliseconds)` and `requestAnimationFrame(function)` functions.
+
+`setTimeout` is a function that will queue up another function to be called after a set amount of time has passed (in milliseconds). We will use this function at the beginning of `update()` so that we can get a constant frame loop for our logic.
+
+`requestAnimationFrame` will also queue up a function to be called later, but you do not have as much control over when this happens. And it may fluctuate! Which is bad for news for when we want to start moving things on the screen. The function will be called on the browser's refresh rate before the next repaint, so it is perfect for rendering.
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+};
+const FPS = 60;
+
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update Code
+};
+
+const draw = (ctx) => {
+    requestAnimationFrame(() => draw(ctx));
+
+    // Drawing Code
+};
+```
+
+So there we have it. `update()` and `draw(ctx)` are functions that set timers to call themselves at a later point and will do this endlessly (for as long as the browser tab is open). This does not cause a stack overflow error because by the time that the next `update()` is called, the previous one is done. Likewise for `draw(ctx)`.
+
+Notice that in `draw(ctx)`, we actually pass an anonymous (nameless) one-line function `() => /* your code here */` that itself calls `draw(ctx)`. Because `draw(ctx)` has a parameter (the context), we can't just pass the function directly like we do with `setTimeout(update, 1 / FPS);` as we would not be able to pass this parameter to future `draw(ctx)` calls.
+
+<br>
+
+In draw, lets fill the screen with a background color every frame. This serves two purposes.
+1. It provides a nice colorful and interesting background and clarifies the area of our canvas.
+2. It draws over (thus clearing) anything rendered in the previous frame.
+
+And while we are at it, let's also draw the floor for our runner game.
+
+![Screenshot of floor and background](./tutorial/images/floor_and_background.png)
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+    FLOOR: '#d8b9aa',
+};
+const FPS = 60;
+const FLOOR_HEIGHT = 512;
+
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update Code
+};
+
+const draw = (ctx) => {
+    requestAnimationFrame(() => draw(ctx));
+
+    // Draw background
+    fill(ctx, COLORS.BACKGROUND);
+
+    // Draw floor
+    fillRect(ctx, 0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT, COLORS.FLOOR);
+};
+```
+
+Notice that the y position of the floor is `CANVAS_HEIGHT - FLOOR_HEIGHT`. Subtracting the height of the floor from the lowest point in the canvas brings the y position up to the point we want. We are subtracting because smaller y values will bring you up! Canvas goes from TOP to BOTTOM!
+
+<br>
+
+Even though we don't see it, this same screen is getting drawn on top of itself every animation frame. Because nothing changes it looks like a static screen. If you want proof that this is happening over and over, write a `console.log('reached!');` statement in either `update()` or `draw(ctx)` and go to the console. Look at all of those console logs!
+
+(This might lag your browser because console logs are a very resource expensive function in fast loops like these. If it is lagging just close the tab and open `index.html` again).
+
+### IV. Introducing the Player & Classes
+
+---
+
+Now we are going to create our third and last JavaScript file. Create a `classes.js` file in `src`. Don't forget to import it to your page in `index.html`. Make sure it is after `utils.js` as our `classes.js` script will make use of it. Make sure it is before `main.js` as it will be used by it.
+
+This also marks the last change we will have to do to `index.html` so here it is one last time.
+
+`index.html`
+``` html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles/styles.css">
+    <script src="./src/utils.js"></script>
+    <script src="./src/classes.js"></script>
+    <script src="./src/main.js"></script>
+    <title>Canvas Runner</title>
+</head>
+
+<body>
+    <canvas></canvas>
+</body>
+
+</html>
+```
+
+In our `classes.js` file we will first `"use strict";` and then we will create our first class.
+
+If you don't know what a class is you can find out more about JavaScript classes [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes). Essentially, it is a template for creating objects. It defines what an object is by the data it holds (variables), and what it can do (functions).
+
+Here is our starter code for `classes.js`:
+
+`classes.js`
+``` javascript
+"use strict";
+
+class Rectangle {
+    constructor(x, y, w, h) {
+        Object.assign(this, { x, y, w, h });
+    }
+    draw(ctx, color = 'black') {
+        fillRect(ctx, this.x, this.y, this.w, this.h, color);
+    }
+}
+```
+
+The first function is our `constructor` which will be called when we use the statement `new Rectangle(x, y, w, h)`and will return an object with those properties.
+
+Object.assign(object, object) will assign all of the properties of the object on the right to the object on the left. This will put all of the parameters passed into our constructor during the call into `this` (the `Rectangle` object being made).
+
+`draw(ctx, color)` is a function that now all `Rectangle` objects will have and can be called from them. It is a helper function that will automatically draw a rectangle with the stored position and size properties.
+
+<br>
+
+Back in `main.js` [forward declare](https://en.wikipedia.org/wiki/Forward_declaration#:~:text=In%20computer%20programming%2C%20a%20forward,yet%20given%20a%20complete%20definition.) the player as a global variable. Set the player equal to a `new Rectangle(x, y, w, h)` and call `player.draw(ctx, color)` in your draw function.
+
+![Screenshot of player Rectangle in game](./tutorial/images/player.png)
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+    FLOOR: '#d8b9aa',
+    PLAYER: '#d6d7dc',
+};
+const FPS = 60;
+const FLOOR_HEIGHT = 512;
+const PLAYER_START_X = 128;
+const PLAYER_SIZE = 256;
+
+// Globals
+let player;
+
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update Code
+};
+
+const draw = (ctx) => {
+    requestAnimationFrame(() => draw(ctx));
+
+    // Draw background
+    fill(ctx, COLORS.BACKGROUND);
+
+    // Draw floor
+    fillRect(ctx, 0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT, COLORS.FLOOR);
+
+    // Draw player
+    player.draw(ctx, COLORS.PLAYER);
+};
+
+const init = () => {
+    // Get canvas from DOM
+    const canvas = document.querySelector("canvas");
+
+    // Set resolution
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    // Get canvas context
+    const ctx = canvas.getContext('2d');
+
+    // Init game objects
+    player = new Rectangle(PLAYER_START_X, CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE);
+
+    // Start loops
+    update();
+    draw(ctx);
+};
+```
+
+Now that you know how classes and objects work, you should try turning the floor into an object on your own. The same way you did for the player and call its `.draw(ctx, color)` function in the `draw(ctx)` loop.
+
+### V. Jumping & Gravity
+
+---
+
+Time to add some physics to our game!
+
+Go back to the `classes.js` file. We are going to create a new `Entity` class that is going to **extend** our previous `Rectangle` class.
+
+Basically, when a class `extends` another, it contains all of the properties and functionality that the previous class had. And then you can add more on top.
+
+Here is out Entity class:
+
+`classes.js`
+``` javascript
+"use strict";
+
+class Rectangle {
+    constructor(x, y, w, h) {
+        Object.assign(this, { x, y, w, h });
+    }
+    draw(ctx, color = 'black') {
+        fillRect(ctx, this.x, this.y, this.w, this.h, color);
+    }
+}
+
+class Entity extends Rectangle {
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
+
+        this.acceleration = {
+            x: 0,
+            y: 0,
+        };
+        this.velocity = {
+            x: 0,
+            y: 0,
+        };
+    }
+
+    update() {
+        this.velocity.x += this.acceleration.x;
+        this.velocity.y += this.acceleration.y;
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+    }
+}
+```
+
+To run through the new concepts.
+
+The `super` keyword inside our `constructor` will simply call the extended class' constructor (it will set the `x, y, w, h` variables).
+
+We create two new properties inside of our `Entity` object, `acceleration` and `velocity`. These two properties are objects in and of themselves with their own `x, y` properties inside of them. They are Vectors, which you can learn about [here](https://natureofcode.com/book/chapter-1-vectors/) in a chapter of Daniel Shiffman's brief free online book [The Nature of Code](https://natureofcode.com/). An incredibly useful read for anyone interested in getting into game development.
+
+To put it simply, think of these Vectors as arrows pointing in a direction that will apply a force in said direction and their `x, y` properties are what determine that direction and how big that force is.
+
+As we can see in the `update()` function of our `Entity`, the acceleration will affect our velocity and the velocity will affect our `Entity`'s `x, y` position. That cascading effect of forces will be our simple physics system.
+
+<br>
+
+To put this into practice, back in `main.js` change our player from a simple `Rectangle` to an `Entity` (no need to change the parameters as the constructors for both classes are identical).
+
+And finally, for our first piece of code in `update()` call the player's `.update()` method.
+
+Nothing is happening. A little underwhelming. But that's because every single force is set to 0. Let's add a downward force to the player right after they are created. This will be our gravity.
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+    FLOOR: '#d8b9aa',
+    PLAYER: '#d6d7dc',
+};
+const FPS = 60;
+const FLOOR_HEIGHT = 512;
+const PLAYER_START_X = 128;
+const PLAYER_SIZE = 256;
+const GRAVITY = 1.2;
+
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update player
+    player.update();
+};
+
+const init = () => {
+    // Get canvas from DOM
+    const canvas = document.querySelector("canvas");
+
+    // Set resolution
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    // Get canvas context
+    const ctx = canvas.getContext('2d');
+
+    // Init game objects
+    floor = new Rectangle(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT);
+    player = new Entity(PLAYER_START_X, CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE);
+    player.acceleration.y = GRAVITY;
+
+    // Start loops
+    update();
+    draw(ctx);
+};
+```
+
+Finally, our first signs of movement in the game. The player fell through the floor and left the screen. Nothing is stopping our player from doing so as the floor is simply a `Rectangle` drawn on screen. It has no physical properties. So lets stop the player from doing so back in `update()` right after the `player.update()` method.
+
+``` javascript
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update player
+    player.update();
+    // Don't let player go below the floor
+    if (player.y > CANVAS_HEIGHT - FLOOR_HEIGHT - player.h) {
+        player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - player.h;
+    }
+};
+```
+
+And just like that, nothing is moving again. That's because our player starts on the ground. If you want to watch our player fall and hit the ground you can change it's starting y position in `init()`. Remember that you will have to subtract in order to get the player to a higher point.
+
+So gravity works. Let's get our player jumping.
+
+For that, we will have to pay attention to keyboard inputs from the user. We will achieve this using JavaScript's Event system, which you can read about [here](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events).
+
+Essentially Events are things that can happen and we can preemptively pass functions to be executed whenever those Events happen.
+
+Here is our Event handling code back in `init()`:
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+    FLOOR: '#d8b9aa',
+    PLAYER: '#d6d7dc',
+};
+const FPS = 60;
+const FLOOR_HEIGHT = 512;
+const PLAYER_START_X = 128;
+const PLAYER_SIZE = 256;
+const GRAVITY = 1.2;
+const PLAYER_JUMP_VELOCITY = 48;
+
+const init = () => {
+    // Get canvas from DOM
+    const canvas = document.querySelector("canvas");
+
+    // Set resolution
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    // Get canvas context
+    const ctx = canvas.getContext('2d');
+
+    // Init game objects
+    floor = new Rectangle(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT);
+    player = new Entity(PLAYER_START_X, CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE);
+    player.acceleration.y = GRAVITY;
+
+    // Events
+    document.addEventListener('keydown', e => {
+        if ((e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')) {
+            player.velocity.y = -PLAYER_JUMP_VELOCITY;
+        }
+    });
+
+    // Start loops
+    update();
+    draw(ctx);
+};
+```
+
+We listen for an Event called `'keydown'`. This happens whenever the player presses a key on their keyboard. The `e` parameter of our function is an object containing data about our event. The property we care about is the `code` of the key that was pressed. This helps us determine which key specifically was pressed and if it is one of the ones we want. In this case `'ArrowUp'`, `'KeyW'`, or `'Space'`.
+
+Then, if one of the jump keys was pressed, we skip acceleration on our cascade of forces and set the velocity directly to a negative value. This will make the object travel up for a while until gravity (which is accelerating the object down) eventually takes over and makes it fall back down.
+
+There is one bug we have yet to fix however. Try pressing any of the jump keys multiple times before even reaching the floor. Our player keeps jumping up in the air!
+
+<br>
+
+Let's go back to our `classes.js` file and add one last class (we will come back to this file one more time after this however to make one small edit).
+
+`classes.js`
+``` javascript
+class Entity extends Rectangle {
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
+
+        this.acceleration = {
+            x: 0,
+            y: 0,
+        };
+        this.velocity = {
+            x: 0,
+            y: 0,
+        };
+    }
+
+    update() {
+        this.velocity.x += this.acceleration.x;
+        this.velocity.y += this.acceleration.y;
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+    }
+}
+
+class Player extends Entity {
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
+
+        this.isGrounded = false;
+    }
+}
+```
+
+A class dedicated solely to the player and it `extends Entity` which itself `extends Rectangle`, so it will contain the properties and functionalities of both.
+
+The only change is that now there is a `isGrounded` property which is a Boolean (true/false) value that we set to false when the player is created.
+
+Return to `main.js` and back in `update()`, find the piece of code where we check that the player does not go below the floor and set the player's `isGrounded` property to `true`.
+
+`main.js`
+``` javascript
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update player
+    player.update();
+    // Don't let player go below the floor
+    if (player.y > CANVAS_HEIGHT - FLOOR_HEIGHT - player.h) {
+        player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - player.h;
+        player.isGrounded = true;
+    }
+};
+```
+
+Now we know the player will be grounded whenever they hit the floor.
+
+In our `'keydown'` Event function, check that the player is grounded before trying to jump and set their `isGrounded` property back to `false` when we do jump.
+
+`main.js`
+``` javascript
+// Events
+    document.addEventListener('keydown', e => {
+        if (player.isGrounded && (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')) {
+            player.velocity.y = -PLAYER_JUMP_VELOCITY;
+            player.isGrounded = false;
+        }
+    });
+```
+
+The jump should be working as intended now.
+
+We are almost done! All we need now is a losing condition, an obstacle for the player to jump over.
+
+### VI. Spikes - the Spice of Life
+
+---
+
+TO BE CONTINUED

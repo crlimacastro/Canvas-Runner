@@ -6,7 +6,7 @@
     const CANVAS_HEIGHT = 2160;
     const COLORS = {
         BACKGROUND: 'cornflowerblue',
-        FLOOR: 'd8b9aa',
+        FLOOR: '#d8b9aa',
         PLAYER: '#d6d7dc',
         SPIKES: '#686573',
     };
@@ -14,8 +14,8 @@
     const FLOOR_HEIGHT = 512;
     const PLAYER_START_X = 128;
     const PLAYER_SIZE = 256;
-    const PLAYER_JUMP_VELOCITY = 48;
     const GRAVITY = 1.2;
+    const PLAYER_JUMP_VELOCITY = 48;
     const SPIKES_VELOCITY = 10;
 
     // Globals
@@ -110,7 +110,7 @@
 
         // Events
         document.addEventListener('keydown', e => {
-            if ((e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') && player.isGrounded) {
+            if (player.isGrounded && (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')) {
                 player.velocity.y = -PLAYER_JUMP_VELOCITY;
                 player.isGrounded = false;
             }
