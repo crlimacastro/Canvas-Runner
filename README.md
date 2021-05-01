@@ -33,6 +33,8 @@ Recommended Tools: VSCode
 
 ### I. Starter Code
 
+[Table of Contents](#table-of-contents)
+
 ---
 
 Create an `index.html` file and add some [boilerplate](https://en.wikipedia.org/wiki/Boilerplate_code) HTML as well as a `<canvas>` element to the body.
@@ -128,6 +130,8 @@ To see your page you have several options, here's two:
 2. Or ideally, if you are using VSCode or any other code editor, find a simple local server functionality with automatic reloads whenever you make changes so that you don't have to reopen your file every time (in VSCode look for and install the Live Server extension, right-click `index.html` and click `Open with Live Server`). 
 
 ### II. Drawing on the Canvas
+
+[Table of Contents](#table-of-contents)
 
 ---
 
@@ -281,6 +285,8 @@ window.onload = () => {
 
 ### III. Writing Game Loops
 
+[Table of Contents](#table-of-contents)
+
 ---
 
 Behind any real-time game's codebase, there is an update loop. Games are real-time applications that have to track state across many frames every second. One common way to handle this is to call an update function every single frame. Let's do that.
@@ -397,6 +403,8 @@ Even though we don't see it, this same screen is getting drawn on top of itself 
 (This might lag your browser because console logs are a very resource expensive function in fast loops like these. If it is lagging just close the tab and open `index.html` again).
 
 ### IV. Introducing the Player & Classes
+
+[Table of Contents](#table-of-contents)
 
 ---
 
@@ -519,6 +527,8 @@ const init = () => {
 Now that you know how classes and objects work, you should try turning the floor into an object on your own. The same way you did for the player and call its `.draw(ctx, color)` function in the `draw(ctx)` loop.
 
 ### V. Jumping & Gravity
+
+[Table of Contents](#table-of-contents)
 
 ---
 
@@ -784,6 +794,8 @@ The jump should be working as intended now.
 We are almost done! All we need now is a losing condition, an obstacle for the player to jump over.
 
 ### VI. Spikes - the Spice of Life
+
+[Table of Contents](#table-of-contents)
 
 ---
 
