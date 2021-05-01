@@ -16,6 +16,8 @@ Last as long as you can.
 
 W, Arrow Up, or Space to Jump.
 
+W, Arrow Up, or Space to reset game after Game Over.
+
 ## Tutorial
 
 Recommended Tools: VSCode
@@ -209,6 +211,7 @@ Add these two functions inside of `utils.js`:
 ``` javascript
 "use strict";
 
+// Draws a filled rectangle in canvas
 const fillRect = (ctx, x, y, w, h, color = 'black') => {
     ctx.save();
     ctx.fillStyle = color;
@@ -216,6 +219,7 @@ const fillRect = (ctx, x, y, w, h, color = 'black') => {
     ctx.restore();
 };
 
+// Fills a canvas with a certain color
 const fill = (ctx, color) => {
     ctx.save();
     ctx.fillStyle = color;
@@ -739,9 +743,9 @@ class Player extends Entity {
 
 A class dedicated solely to the player and it `extends Entity` which itself `extends Rectangle`, so it will contain the properties and functionalities of both.
 
-The only change is that now there is a `isGrounded` property which is a Boolean (true/false) value that we set to false when the player is created.
+The only change is that now there is a `isGrounded` property which is a Boolean (`true`/`false`) value that we set to `false` when the player is created.
 
-Return to `main.js` and back in `update()`, find the piece of code where we check that the player does not go below the floor and set the player's `isGrounded` property to `true`.
+Return to `main.js`. Back in `init()`. change the player to a `new Player(x, y, w, h)` instead of an `Entity` (cnce again, no need to change the parameters). In `update()`, find the piece of code where we check that the player does not go below the floor and set the player's `isGrounded` property to `true`.
 
 `main.js`
 ``` javascript
@@ -781,4 +785,508 @@ We are almost done! All we need now is a losing condition, an obstacle for the p
 
 ---
 
-TO BE CONTINUED
+Thankfully, because of our structure, we already have most of the pieces we need to make the spikes.
+
+We will be working a lot with random integers in the following lines of code so let us visit an old friend, our `utils.js` file and add a helper function to get a random integer (no decimal point) number between two numbers.
+
+`utils.js`
+``` javascript
+// Fills a canvas with a certain color
+const fill = (ctx, color) => {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+};
+
+// Returns random integer number between min (inclusive) and max (inclusive)
+const randomRangeInt = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+```
+
+Let's forward declare our array of spikes among the globals and create a helper `spawnSpike()` function that will be our last infinite loop.
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+    FLOOR: '#d8b9aa',
+    PLAYER: '#d6d7dc',
+};
+const FPS = 60;
+const FLOOR_HEIGHT = 512;
+const PLAYER_START_X = 128;
+const PLAYER_SIZE = 256;
+const GRAVITY = 1.2;
+const PLAYER_JUMP_VELOCITY = 48;
+const SPIKES_VELOCITY = 10;
+
+// Globals
+let floor;
+let player;
+let spikes = [];
+
+// Spawns a moving spike off-screen every few seconds
+const spawnSpike = () => {
+    setTimeout(spawnSpike, randomRangeInt(2000, 5000))
+
+    // Create spike
+    const width = randomRangeInt(32, 64);
+    const height = randomRangeInt(128, 256);
+    const spike = new Entity(CANVAS_WIDTH, CANVAS_HEIGHT - FLOOR_HEIGHT - height, width, height);
+
+    // Init spike velocity
+    spike.velocity.x = -SPIKES_VELOCITY;
+
+    // Add to spikes list
+    spikes.push(spike);
+};
+
+const update = () => {
+    ...
+```
+
+Like `update()`, `spawnSpike()` is a function that calls itself on a timeout. Except the timeout this time is much longer 2000-5000 milliseconds, so 2-5 seconds.
+
+We set some randomization for the spikes' width and height so that they all look different and have different difficulties.
+
+We set an initial negative x velocity that stays constant, making the spikes move towards the player at a constant speed.
+
+And we add the newly created spike to the array of spikes so we can handle them all together later.
+
+<br>
+
+Back in `init()` start the spikes' spawning loop after `update()` and `draw(ctx)`.
+
+`main.js`
+``` javascript
+const init = () => {
+
+    ...
+
+    // Events
+    document.addEventListener('keydown', e => {
+        if (player.isGrounded && (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')) {
+            player.velocity.y = -PLAYER_JUMP_VELOCITY;
+            player.isGrounded = false;
+        }
+    });
+
+    // Start loops
+    update();
+    draw(ctx);
+    spawnSpike();
+};
+```
+
+In `update()`, use JavaScript's `Array.forEach(function(element))` method to apply a function to all the individual spikes in the `spikes` array. In this case, a function that calls each spike's `.update()` method.
+
+Then, remove any spikes that move off-screen from the array so that we don't have to update or draw them anymore and we can forget about them. You can use JavaScript's `Array.filter(function(element))` method. This method returns a copy of your array with all elements that pass the return condition of the function you pass into it.
+
+In this case, I am passing a function that tells it to give me a copy of the array with all of the spikes who are still on-screen (`spike.x > -spike.w`).
+
+I use `spike.x > -spike.w` because I want the spikes whose x position is above `0 - spike.w`, 0 being the leftmost point in the canvas. Meaning there is at least some part of it left on-screen.
+
+`main.js`
+``` javascript
+const update = () => {
+    setTimeout(update, 1 / FPS);
+
+    // Update player
+    player.update();
+    // Don't let player go below the floor
+    if (player.y > CANVAS_HEIGHT - FLOOR_HEIGHT - player.h) {
+        player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - player.h;
+        player.isGrounded = true;
+    }
+
+    // Spikes
+    spikes.forEach(spike => {
+        // Update spikes
+        spike.update();
+    });
+    // Remove offscreen spikes
+    spikes = spikes.filter(spike => spike.x > -spike.w);
+};
+```
+
+In `draw(ctx)`, use `Array.foreach()` once again to call the `.draw(ctx, color)` method of every individual spike in the array. Make sure to draw the spikes before the player so that the player is rendered on top of them
+
+`main.js`
+``` javascript
+// Constants
+const CANVAS_WIDTH = 3840;
+const CANVAS_HEIGHT = 2160;
+const COLORS = {
+    BACKGROUND: 'cornflowerblue',
+    FLOOR: '#d8b9aa',
+    PLAYER: '#d6d7dc',
+    SPIKES: '#686573',
+};
+const FPS = 60;
+const FLOOR_HEIGHT = 512;
+const PLAYER_START_X = 128;
+const PLAYER_SIZE = 256;
+const GRAVITY = 1.2;
+const PLAYER_JUMP_VELOCITY = 48;
+const SPIKES_VELOCITY = 10;
+
+const draw = (ctx) => {
+    requestAnimationFrame(() => draw(ctx));
+
+    // Draw background
+    fill(ctx, COLORS.BACKGROUND);
+
+    // Draw floor
+    floor.draw(ctx, COLORS.FLOOR);
+
+    // Draw spikes
+    spikes.forEach(spike => spike.draw(ctx, COLORS.SPIKES));
+
+    // Draw player
+    player.draw(ctx, COLORS.PLAYER);
+};
+```
+
+Now we have some spikes moving into the screen every now and then. Great!
+
+But they are moving past the player and off the screen when the player doesn't jump over them. We need to know when the player is touching a spike. And to do that, we need to go back to `classes.js` one last time like I said before.
+
+Go back to your very first class, the `Rectangle` class and add this last `areColliding(rect1, rect2)` method to it:
+
+`classes.js`
+``` javascript
+class Rectangle {
+    constructor(x, y, w, h) {
+        Object.assign(this, { x, y, w, h });
+    }
+    draw(ctx, color = 'black') {
+        fillRect(ctx, this.x, this.y, this.w, this.h, color);
+    }
+    static areColliding(rect1, rect2) {
+        // AABB Collision Test
+        return rect1.x < rect2.x + rect2.w &&
+            rect1.x + rect1.w > rect2.x &&
+            rect1.y < rect2.y + rect2.h &&
+            rect1.y + rect1.h > rect2.y;
+    }
+}
+```
+
+This is a simple 2D Collision Detection Algorithm called AABB, which you can read more about [here](https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection#axis-aligned_bounding_box). It tells us if two rectangles are overlapping by taking in two `Rectangle` objects and returning `true` or `false`.
+
+The `static` keyword means that this function is not called from any given `Rectangle` object. It is called from the class definition itself with the syntax `Rectangle.areColliding(rect1, rect2)`.
+
+So let's put it to use.
+
+Back in `main.js`, in the `update()` loop, find the `spikes.forEach()` and after updating a spike, check if a collision happened with the player.
+
+`main.js`
+``` javascript
+const update = () => {
+    ...
+
+    // Spikes
+    spikes.forEach(spike => {
+        // Update spikes
+        spike.update();
+
+        // Check collision
+        if (Rectangle.areColliding(player, spike)) {
+            // Game over
+            // Do game over logic here
+        }
+    });
+    // Remove offscreen spikes
+    spikes = spikes.filter(spike => spike.x > -spike.w);
+};
+```
+
+So what are we going to do when the player hits a spike?
+
+Let's define three new functions in `main.js` after `update()` and before `draw(ctx)`:
+1. `reset()`
+2. `tryReset(e)`
+3. `stop()`
+
+`main.js`
+``` javascript
+// Resets game parameters back to the start
+const reset = () => {
+    // Reset player
+    player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE;
+    player.velocity.y = 0;
+
+    // Clear spikes
+    spikes = [];
+
+    // Start the updates again
+    update();
+    spawnSpike();
+};
+
+// Tries to reset game
+const tryReset = (e) => {
+    if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+        // Remove event listener for self
+        document.removeEventListener('keydown', tryReset);
+        // Reset game
+        reset();
+    }
+};
+
+// Stops game updates and waits for a reset
+const stop = () => {
+    clearTimeout(updateID);
+    clearTimeout(spawnSpikeID);
+
+    // Add event listener for reset
+    document.addEventListener('keydown', tryReset);
+};
+```
+
+Together, these three functions define the flow of the Game Over state. 
+
+When a collision happens between a spike and the player, `stop()` will be called. This will stop the currently queued (and thus subsequent) update and spawnSpike calls. `stop()` will also start listening for `'keydown'` events and call `tryReset(e)` whenever they are triggered.
+
+`tryReset(e)` will check if one of the jump keys was pressed. If so, it will remove itself from the listener and call `reset()`.
+
+`reset()` does exactly what you would expect. Resets the player's position and velocity, clears the spikes array, and starts the `update()` loop again.
+
+<br>
+
+Something I didn't mention before is that both the `setTimeout(function, milliseconds)` and `requestAnimationFrame(function)` functions return a `Number` value, which is the id of the timeout request that we can use to cancel it. We weren't saving it before because it was not being used, but it will prove very useful for the stop feature.
+
+Create globals for the spawnSpikeID and updateID and in their respective functions, cache the return value of their `setTimeout(function, milliseconds)` call. In `update()`, if a collision is found with the player, call `stop()`.
+
+The `spawnSpike()` and `update()` loops would end up looking like so:
+
+`main.js`
+``` javascript
+// Globals
+let floor;
+let player;
+let spikes = [];
+let spawnSpikeID;
+let updateID;
+
+// Spawns a moving spike off-screen every few seconds
+const spawnSpike = () => {
+    spawnSpikeID = setTimeout(spawnSpike, randomRangeInt(2000, 5000))
+
+    // Create spike
+    const width = randomRangeInt(32, 64);
+    const height = randomRangeInt(128, 256);
+    const spike = new Entity(CANVAS_WIDTH, CANVAS_HEIGHT - FLOOR_HEIGHT - height, width, height);
+
+    // Init spike velocity
+    spike.velocity.x = -SPIKES_VELOCITY;
+
+    // Add to spikes list
+    spikes.push(spike);
+};
+
+const update = () => {
+    updateID = setTimeout(update, 1 / FPS);
+
+    // Update player
+    player.update();
+    // Don't let player go below the floor
+    if (player.y > CANVAS_HEIGHT - FLOOR_HEIGHT - player.h) {
+        player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - player.h;
+        player.isGrounded = true;
+    }
+
+    // Spikes
+    spikes.forEach(spike => {
+        // Update spikes
+        spike.update();
+
+        // Check collision
+        if (Rectangle.areColliding(player, spike)) {
+            // Game over
+            stop();
+        }
+    });
+    // Remove offscreen spikes
+    spikes = spikes.filter(spike => spike.x > -spike.w);
+};
+```
+
+Finally, we are nearing the end of this tutorial and there is only one last thing to take care of. Because of the scope our functions and variables were declared on, the player currently has full control over the game logic through the console. They can call update(), they can call stop(), and even mess with the spikes array and that is very bad news for our game.
+
+The quickest way to solve this is to declare all of the code in our `main.js` file within an [IIFE](https://flaviocopes.com/javascript-iife/#:~:text=An%20Immediately%2Dinvoked%20Function%20Expression%20(IIFE%20for%20friends)%20is,way%20to%20isolate%20variables%20declarations.). Put simply, it is an anonymous function that is called as soon as it is created and it serves to create an enclosed scope that no outside script can access.
+
+You can create and immediately call an IIFE in JavasCript by enclosing your code in the following syntax
+
+``` javascript
+(() => {
+    /* Your code here */
+})();
+```
+
+In the end, our `main.js` file would look like so:
+
+`main.js`
+``` javascript
+(() => {
+    "use strict";
+
+    // Constants
+    const CANVAS_WIDTH = 3840;
+    const CANVAS_HEIGHT = 2160;
+    const COLORS = {
+        BACKGROUND: 'cornflowerblue',
+        FLOOR: '#d8b9aa',
+        PLAYER: '#d6d7dc',
+        SPIKES: '#686573',
+    };
+    const FPS = 60;
+    const FLOOR_HEIGHT = 512;
+    const PLAYER_START_X = 128;
+    const PLAYER_SIZE = 256;
+    const GRAVITY = 1.2;
+    const PLAYER_JUMP_VELOCITY = 48;
+    const SPIKES_VELOCITY = 10;
+    
+    // Globals
+    let floor;
+    let player;
+    let spikes = [];
+    let spawnSpikeID;
+    let updateID;
+    
+    // Spawns a moving spike off-screen every few seconds
+    const spawnSpike = () => {
+        spawnSpikeID = setTimeout(spawnSpike, randomRangeInt(2000, 5000))
+    
+        // Create spike
+        const width = randomRangeInt(32, 64);
+        const height = randomRangeInt(128, 256);
+        const spike = new Entity(CANVAS_WIDTH, CANVAS_HEIGHT - FLOOR_HEIGHT - height, width, height);
+    
+        // Init spike velocity
+        spike.velocity.x = -SPIKES_VELOCITY;
+    
+        // Add to spikes list
+        spikes.push(spike);
+    };
+    
+    const update = () => {
+        updateID = setTimeout(update, 1 / FPS);
+    
+        // Update player
+        player.update();
+        // Don't let player go below the floor
+        if (player.y > CANVAS_HEIGHT - FLOOR_HEIGHT - player.h) {
+            player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - player.h;
+            player.isGrounded = true;
+        }
+    
+        // Spikes
+        spikes.forEach(spike => {
+            // Update spikes
+            spike.update();
+    
+            // Check collision
+            if (Rectangle.areColliding(player, spike)) {
+                // Game over
+                stop();
+            }
+        });
+        // Remove offscreen spikes
+        spikes = spikes.filter(spike => spike.x > -spike.w);
+    };
+    
+    // Resets game parameters back to the start
+    const reset = () => {
+        // Reset player
+        player.y = CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE;
+        player.velocity.y = 0;
+    
+        // Clear spikes
+        spikes = [];
+    
+        // Start the updates again
+        update();
+        spawnSpike();
+    };
+    
+    // Tries to reset game
+    const tryReset = (e) => {
+        if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+            // Remove event listener for self
+            document.removeEventListener('keydown', tryReset);
+            // Reset game
+            reset();
+        }
+    };
+    
+    // Stops game updates and waits for a reset
+    const stop = () => {
+        clearTimeout(updateID);
+        clearTimeout(spawnSpikeID);
+    
+        // Add event listener for reset
+        document.addEventListener('keydown', tryReset);
+    };
+    
+    const draw = (ctx) => {
+        requestAnimationFrame(() => draw(ctx));
+    
+        // Draw background
+        fill(ctx, COLORS.BACKGROUND);
+    
+        // Draw floor
+        floor.draw(ctx, COLORS.FLOOR);
+    
+        // Draw spikes
+        spikes.forEach(spike => spike.draw(ctx, COLORS.SPIKES));
+    
+        // Draw player
+        player.draw(ctx, COLORS.PLAYER);
+    };
+    
+    const init = () => {
+        // Get canvas from DOM
+        const canvas = document.querySelector("canvas");
+    
+        // Set resolution
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+    
+        // Get canvas context
+        const ctx = canvas.getContext('2d');
+    
+        // Init game objects
+        floor = new Rectangle(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, FLOOR_HEIGHT);
+        player = new Player(PLAYER_START_X, CANVAS_HEIGHT - FLOOR_HEIGHT - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE);
+        player.acceleration.y = GRAVITY;
+    
+        // Events
+        document.addEventListener('keydown', e => {
+            if (player.isGrounded && (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space')) {
+                player.velocity.y = -PLAYER_JUMP_VELOCITY;
+                player.isGrounded = false;
+            }
+        });
+    
+        // Start loops
+        update();
+        draw(ctx);
+        spawnSpike();
+    };
+    
+    window.onload = () => {
+        // Preload anything - fonts, images, sounds, etc...
+    
+        init();
+    };
+})();
+```
