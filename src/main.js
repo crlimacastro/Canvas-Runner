@@ -1,16 +1,16 @@
-'use strict';
+"use strict";
 
 (() => {
     // Constants
     const CANVAS_WIDTH = 3840;
     const CANVAS_HEIGHT = 2160;
-    const FPS = 60;
     const COLORS = {
         BACKGROUND: 'cornflowerblue',
         FLOOR: 'd8b9aa',
         PLAYER: '#d6d7dc',
         SPIKES: '#686573',
     };
+    const FPS = 60;
     const FLOOR_HEIGHT = 512;
     const PLAYER_START_X = 128;
     const PLAYER_SIZE = 256;
@@ -124,7 +124,7 @@
     };
 
     window.onload = () => {
-        // Preload - fonts, images, sounds, etc...
+        // Preload anything - fonts, images, sounds, etc...
 
         init();
     };

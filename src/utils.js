@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const fill = (ctx, color) => {
     ctx.save();
