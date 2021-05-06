@@ -1149,7 +1149,7 @@ Finally, we are nearing the end of this tutorial and there is only one last thin
 
 The quickest way to solve this is to declare all of the code in our `main.js` file within an [IIFE](https://flaviocopes.com/javascript-iife/#:~:text=An%20Immediately%2Dinvoked%20Function%20Expression%20(IIFE%20for%20friends)%20is,way%20to%20isolate%20variables%20declarations.). Put simply, it is an anonymous function that is called as soon as it is created and it serves to create an enclosed scope that no outside script can access.
 
-You can create and immediately call an IIFE in JavasCript by enclosing your code in the following syntax
+You can create and immediately call an IIFE in JavaScript by enclosing your code in the following syntax
 
 ``` javascript
 (() => {
